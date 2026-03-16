@@ -2,6 +2,11 @@
 
 # advent-of-code2022-reloaded
 
+The AoC 2022 solutions I wrote at that time can be found here:  
+https://github.com/alessandrocandolini/advent-of-code2022
+
+Since then, I’ve learned a thing or two. Time to solve them again in fresh new ways.
+
 ## How to build and run locally
 
 The project uses the [Haskell tool stack](https://docs.haskellstack.org/en/stable/README/). The recommended way to install stack is by using [ghcup](https://www.haskell.org/ghcup/).
