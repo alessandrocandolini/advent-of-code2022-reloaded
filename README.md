@@ -1,3 +1,5 @@
+[![Compile and run tests](https://github.com/alessandrocandolini/advent-of-code2022-reloaded/actions/workflows/ci.yml/badge.svg)](https://github.com/alessandrocandolini/advent-of-code2022-reloaded/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/alessandrocandolini/advent-of-code2022-reloaded/graph/badge.svg?token=YHR9lK88dg)](https://codecov.io/gh/alessandrocandolini/advent-of-code2022-reloaded)
+
 # advent-of-code2022-reloaded
 
 ## How to build and run locally
