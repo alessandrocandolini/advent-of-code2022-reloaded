@@ -1,0 +1,94 @@
+name:                advent-of-code2022-reloaded
+version:             0.1.0.0
+description:         "advent-of-code2022-reloaded"
+
+dependencies:
+- base >= 4.7 && < 5
+- text
+- containers
+- unordered-containers
+- hashable
+- vector
+- split
+- safe
+- either
+- megaparsec
+- optparse-applicative
+- witherable
+- neat-interpolation
+- recursion-schemes
+- data-fix
+- pretty
+- comonad
+- distributive
+- adjunctions
+- machines
+- algebraic-graphs
+- ansi-terminal
+- envparse
+- req
+- bytestring
+- mtl
+- aeson
+- aeson-pretty
+- array
+
+default-extensions:
+- OverloadedStrings
+
+ghc-options:
+  - -Wall
+  - -Werror=incomplete-patterns
+  - -Werror=incomplete-uni-patterns
+  - -Wincomplete-record-updates
+  - -Wredundant-constraints
+  - -Wunused-packages
+  - -O2
+
+library:
+  source-dirs: src
+
+executables:
+  advent-of-code2022-reloaded:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - advent-of-code2022-reloaded
+
+tests:
+  advent-of-code2022-reloaded-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O0 # No optimisation for faster test runs
+    dependencies:
+    - advent-of-code2022-reloaded
+    - hspec
+    - hspec-discover
+    - QuickCheck
+    build-tools:
+    - hspec-discover
+
+benchmarks:
+  advent-of-code2022-reloaded-benchmarks:
+    main: Main.hs
+    source-dirs: benchmarks
+    ghc-options:
+      - -O2
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-s
+    dependencies:
+      - advent-of-code2022-reloaded
+      - base
+      - criterion
+
+verbatim:
+  cabal-version: 3.0
