@@ -32,6 +32,8 @@ dependencies:
 - aeson
 - aeson-pretty
 - array
+- tardis
+- layoutz
 
 default-extensions:
 - OverloadedStrings
