@@ -36,20 +36,26 @@ which generates a textual and HTML report.
 
 Note: Tests are run in the CI and test coverage reports are automatically uploaded to codecov.
 
-To **run** the executable via slack,
+To **run** the executable via stack,
 ```
-stack exec advent-of-code2022-reloaded
+stack exec aoc2022
 ```
 or passing arguments
 ```
-stack exec advent-of-code2022-reloaded -- -d <day> -f <filename>
+stack exec aoc2022 -- -d <day> -f <filename>
+```
+
+To copy the executable to the project root and run it as `./aoc2022`,
+```
+stack build --copy-bins --local-bin-path .
+./aoc2022
 ```
 
 To **install** the executable under `~/.local/bin`,
 ```
 stack install
 ```
-and the executable can be run with `advent-of-code2022-reloaded` assuming `~/.local/bin` is in the `$PATH` variable.
+and the executable can be run with `aoc2022` assuming `~/.local/bin` is in the `$PATH` variable.
 
 To run a version of **ghci** compatible with the resolver
 ```

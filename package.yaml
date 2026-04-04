@@ -51,7 +51,7 @@ library:
   source-dirs: src
 
 executables:
-  advent-of-code2022-reloaded:
+  aoc2022:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
