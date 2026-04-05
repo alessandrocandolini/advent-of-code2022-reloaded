@@ -20,7 +20,7 @@ program =
   getArgs >>= (handleParseResult . parseArgs) >>= program'
 
 program' :: Command -> IO ()
-program' (Run (Args n input)) = readInput input >>= runSolution n
+program' (Solve (Args n input)) = readInput input >>= runSolution n
 program' (Generate (GenerateArgs d)) = CodeGenerator.program d
 program' (GetStats (StatsArgs year export)) = Stats.program year export
 
