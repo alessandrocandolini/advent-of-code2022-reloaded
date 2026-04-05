@@ -14,11 +14,11 @@ parseArgsMaybe = transform . parseArgs
 
 spec :: Spec
 spec = describe "Args parser" $ do
-  it "is able to parse a valid command to run the solution from file" $
-    parseArgsMaybe ["run", "-d", "1", "-f", "file"] `shouldBe` Right (Run (Args 1 (FromFile "file")))
+  it "is able to parse a valid command to solve the puzzle from file" $
+    parseArgsMaybe ["solve", "-d", "1", "-f", "file"] `shouldBe` Right (Solve (Args 1 (FromFile "file")))
 
-  it "is able to parse a valid command to run the solution from standard input" $
-    parseArgsMaybe ["run", "-d", "1", "--with-input"] `shouldBe` Right (Run (Args 1 FromStdInput))
+  it "is able to parse a valid command to solve the puzzle from standard input" $
+    parseArgsMaybe ["solve", "-d", "1", "--with-input"] `shouldBe` Right (Solve (Args 1 FromStdInput))
 
   it "is able to parse a valid command to generate the scaffolding for a new day" $
     parseArgsMaybe ["generate", "-d", "1"] `shouldBe` Right (Generate (GenerateArgs 1))

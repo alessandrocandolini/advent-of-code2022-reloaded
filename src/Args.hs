@@ -5,7 +5,7 @@ import qualified Data.Text.IO as T
 import Options.Applicative
 
 data Command
-  = Run Args
+  = Solve Args
   | Generate GenerateArgs
   | GetStats StatsArgs
   deriving (Eq, Show)
@@ -84,7 +84,7 @@ statsArgsParser =
 commandParser :: Parser Command
 commandParser =
   hsubparser
-    ( command "run" (info (Run <$> argsParser) (progDesc "run the solution to the puzzle"))
+    ( command "solve" (info (Solve <$> argsParser) (progDesc "solve the puzzle for the selected day"))
         <> command "generate" (info (Generate <$> generateArgsParser) (progDesc "generate scaffolding from template for a given day"))
         <> command "stats" (info (GetStats <$> statsArgsParser) (progDesc "retrieve stats from the AOC website"))
     )
