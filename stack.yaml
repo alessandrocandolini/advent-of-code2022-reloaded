@@ -43,6 +43,7 @@ packages:
 extra-deps:
   - layoutz-0.2.0.0@sha256:33acc795157b95eb0dc43633896678323bb5a03122df6691340339a08ab9f66b,1402
   - pup-0.1.0@sha256:032809b76cc1ce697912adce7e314d1ccf2e8fae1a6ad3945fa194f591cddbc9,1473
+  - stacked-0.1.0@sha256:9244c10b2e44e1cc09a50817f887ebaca4b03006bbc9c8b2ff66d89478822aaf,1027
 # Override default flag values for project packages and extra-deps
 # flags: {}
 
