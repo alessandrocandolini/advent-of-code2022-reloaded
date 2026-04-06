@@ -1,10 +1,10 @@
 {-# LANGUAGE DerivingVia #-}
 
-module Day1 (parse, solve, program, solve1, solve2, winner, topWinners, Elf (Elf), Calories (Calories), Solution (Solution)) where
+module Day1 (parse, solve, program, solve1, solve2, Elf (Elf), Calories (Calories), Solution (Solution)) where
 
 import Control.Monad.Combinators.NonEmpty (sepEndBy1)
 import Data.Bifunctor (first)
-import Data.Foldable1 (Foldable1 (fold1, foldMap1), maximumBy)
+import Data.Foldable1 (Foldable1 (fold1))
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as N
 import Data.Monoid (Sum (Sum))
@@ -26,25 +26,19 @@ data Elf = Elf (NonEmpty Calories) deriving (Eq, Show)
 totalCalories :: Elf -> Calories
 totalCalories (Elf calories) = fold1 calories
 
-winner :: NonEmpty Elf -> Elf
-winner = maximumBy (comparing totalCalories)
-
-topWinners :: Int -> NonEmpty Elf -> NonEmpty Elf
-topWinners n = takeAtLeastOne n . N.sortOn (Down . totalCalories)
- where
-  takeAtLeastOne m = (N.:|) <$> N.head <*> (take (max 0 (m - 1)) . N.tail)
-
 solve1 :: NonEmpty Elf -> Calories
-solve1 = totalCalories . winner
+solve1 = maximum . fmap totalCalories
 
 solve2 :: NonEmpty Elf -> Calories
-solve2 = foldMap1 totalCalories . topWinners 3
-
-program :: T.Text -> IO ()
-program = print . solve
+solve2 = fold1 . takeFirst3 . N.sortBy (comparing Down) . fmap totalCalories
+ where
+  takeFirst3 = (N.:|) <$> N.head <*> (take 2 . N.tail)
 
 solve :: T.Text -> Either String Solution
 solve = fmap (Solution <$> solve1 <*> solve2) . parse
+
+program :: T.Text -> IO ()
+program = print . solve
 
 type Parser = Parsec Void T.Text
 

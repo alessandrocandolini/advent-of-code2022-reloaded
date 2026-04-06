@@ -14,8 +14,6 @@ import Day1 (
   solve,
   solve1,
   solve2,
-  topWinners,
-  winner,
  )
 import NeatInterpolation (trimming)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
@@ -50,20 +48,14 @@ elfs = [elf1, elf2, elf3, elf4, elf5]
 
 spec :: Spec
 spec = describe "Day 1" $ do
-  it "winner" $
-    winner elfs `shouldBe` elf4
-
   it "solve1" $
     solve1 elfs `shouldBe` (Calories 24_000)
 
-  it "winners" $
-    topWinners 5 elfs `shouldBe` [elf4, elf3, elf5, elf1, elf2]
-
-  it "topWinners deliberately always returns at least the winner" $
-    topWinners 0 elfs `shouldBe` [elf4]
-
   it "solve2" $
     solve2 elfs `shouldBe` (Calories 45_000)
+
+  it "solve2 behaves like solve1 on inputs with only one elf" $
+    solve2 [elf1] `shouldBe` solve1 [elf1]
 
   it "parse" $
     parse input `shouldBe` Right elfs
