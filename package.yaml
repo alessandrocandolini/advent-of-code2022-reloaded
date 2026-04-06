@@ -13,6 +13,7 @@ dependencies:
 - safe
 - either
 - megaparsec
+- parser-combinators
 - optparse-applicative
 - witherable
 - neat-interpolation
