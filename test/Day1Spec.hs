@@ -54,6 +54,9 @@ spec = describe "Day 1" $ do
   it "solve2" $
     solve2 elfs `shouldBe` (Calories 45_000)
 
+  it "solve2 behaves like solve1 on inputs with only one elf" $
+    solve2 [elf1] `shouldBe` solve1 [elf1]
+
   it "parse" $
     parse input `shouldBe` Right elfs
 
