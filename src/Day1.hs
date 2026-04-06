@@ -8,7 +8,7 @@ import Data.Foldable1 (Foldable1 (fold1))
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as N
 import Data.Monoid (Sum (Sum))
-import Data.Ord (Down (Down))
+import Data.Ord (Down (Down), comparing)
 import qualified Data.Text as T
 import Data.Void (Void)
 import Text.Megaparsec (MonadParsec (eof), Parsec, errorBundlePretty, runParser)
@@ -30,7 +30,7 @@ solve1 :: NonEmpty Elf -> Calories
 solve1 = maximum . fmap totalCalories
 
 solve2 :: NonEmpty Elf -> Calories
-solve2 = fold1 . takeFirst3 . N.sortOn Down . fmap totalCalories
+solve2 = fold1 . takeFirst3 . N.sortBy (comparing Down) . fmap totalCalories
  where
   takeFirst3 = (N.:|) <$> N.head <*> (take 2 . N.tail)
 
