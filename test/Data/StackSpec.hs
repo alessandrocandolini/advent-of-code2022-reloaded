@@ -22,31 +22,31 @@ instance Arbitrary StackOrder where
 
 spec :: Spec
 spec = do
-  prop "pop after push gives back the same element on any stack" $ \a s ->
+  prop "pop . push returns the pushed element and the original stack" $ \a s ->
     pop (push s a) `shouldBe` (Just (a, s) :: Maybe (Int, Stack Int))
 
   prop "pop is empty if and only if the stack is empty" $ \s ->
     isNothing (pop s) `shouldBe` isEmpty (s :: Stack String)
 
-  prop "fromList inserts from right to left; the head of the list is the head of the stack (ie, the first element to be extracted when pop)" $ \a1 a2 a3 ->
+  prop "fromList preserves left-to-right order (the head of the list becomes the top of the stack)" $ \a1 a2 a3 ->
     fromList [a1, a2, a3] `shouldBe` (NonEmptyStack a1 (NonEmptyStack a2 (NonEmptyStack a3 EmptyStack)) :: Stack Int)
 
-  prop "toList returns a list whose head is the head of the stack" $ \a1 a2 a3 ->
+  prop "toList preserves top-to-bottom order (the top of the stack becomes the head of the list)" $ \a1 a2 a3 ->
     toList (NonEmptyStack a1 (NonEmptyStack a2 (NonEmptyStack a3 EmptyStack))) `shouldBe` ([a1, a2, a3] :: [Int])
 
-  prop "cyclic property of toList and fromList" $ \as ->
+  prop "toList . fromList = id" $ \as ->
     toList ((fromList as) :: Stack Int) `shouldBe` as
 
-  prop "pushN inserts from right to left; the head of the list is the head of the stack (ie, the first element to be extracted when pop)" $ \a1 a2 a3 s ->
+  prop "pushN preserves left-to-right order (the head of the list becomes the new top of the stack)" $ \a1 a2 a3 s ->
     pushN s [a1, a2, a3] `shouldBe` (NonEmptyStack a1 (NonEmptyStack a2 (NonEmptyStack a3 s)) :: Stack Int)
 
-  prop "popN returns a list whose head is the head of the stack" $ \a1 a2 a3 s ->
+  prop "popN preserves top-to-bottom order in the extracted list (the top of the stack becomes the head of the extracted list)" $ \a1 a2 a3 s ->
     popN 3 (NonEmptyStack a1 (NonEmptyStack a2 (NonEmptyStack a3 s))) `shouldBe` ([a1, a2, a3] :: [Int], s)
 
-  prop "cyclic property of pushN and popN" $ \as s ->
+  prop "popN (length xs) . pushN xs = id on the residual stack" $ \as s ->
     popN (length as) (pushN s as) `shouldBe` ((as, s) :: ([Int], Stack Int))
 
-  prop "move and reverse move brings back the original stacks (if the source stack has enough items)" $ \n o s d ->
+  prop "moving n elements twice restores the original pair (provided the source contains at least n elements)" $ \n o s d ->
     (n > 0)
       ==> let
             (s', d') = move o n s d
@@ -54,7 +54,7 @@ spec = do
            in
             (s, d) `shouldBe` ((s'', d'') :: (Stack Int, Stack Int))
 
-  prop "move preserves the total number of elements" $ \o n s d ->
+  prop "move preserves the total size" $ \o n s d ->
     let
       s', d' :: Stack Int
       (s', d') = move o n s d
@@ -70,7 +70,7 @@ spec = do
      in
       (s', d') `shouldBe` (s'', d'')
 
-  prop "move n elements in FIFO order moves the top part of the stack from source to destination" $ \n s d ->
+  prop "move Fifo preserves the order of the moved block (at the top of the destination stack)" $ \n s d ->
     (n > 0)
       ==> let
             n' = min n (size s)
@@ -81,44 +81,44 @@ spec = do
            in
             (as, d) `shouldBe` (as', d'')
 
-  prop "move 1 element is the same in FIFO or LIFO order" $ \s d ->
+  prop "move 1 is independent of the stack order" $ \s d ->
     move Fifo 1 s d `shouldBe` ((move Lifo 1 s d) :: (Stack Int, Stack Int))
 
-  prop "move with n <= 0 leaves both stacks unchanged" $ \n o s d ->
+  prop "move is the identity for n <= 0" $ \n o s d ->
     (n <= 0) ==> move o n s d `shouldBe` ((s, d) :: (Stack Int, Stack Int))
 
-  prop "moving from an empty source leaves both stacks unchanged" $ \n o s ->
+  prop "move is the identity on an empty source" $ \n o s ->
     move o n EmptyStack s `shouldBe` ((EmptyStack, s) :: (Stack Int, Stack Int))
 
-  prop "moving one element does not depend on fifo/lifo" $ \s d ->
+  prop "moving one element does not depend on the stack order" $ \s d ->
     move Fifo 1 s d `shouldBe` ((move Lifo 1 s d) :: (Stack Int, Stack Int))
 
   it "popN 0 returns no elements and leaves the stack unchanged" $
     popN 0 [1, 2, 3] `shouldBe` (([], [1, 2, 3]) :: ([Int], Stack Int))
 
-  it "popN with a negative count returns no elements and leaves the stack unchanged" $
+  it "popN returns no elements and leaves the stack unchanged for n < 0" $
     popN (-2) [1, 2, 3] `shouldBe` (([], [1, 2, 3]) :: ([Int], Stack Int))
 
-  it "popN larger than the stack size returns all elements and empties the stack" $
+  it "popN n extracts the whole stack for n >= size" $
     popN 10 [1, 2, 3] `shouldBe` (([1, 2, 3], EmptyStack) :: ([Int], Stack Int))
 
-  it "popN on an empty stack returns an empty result and empty remainder" $
+  it "popN on EmptyStack returns ([], EmptyStack)" $
     popN 3 EmptyStack `shouldBe` (([], EmptyStack) :: ([Int], Stack Int))
 
-  it "check list syntax for stacks" $
+  it "OverloadedLists agrees with the Stack constructors" $
     ['a', 'b', 'c'] `shouldBe` (NonEmptyStack 'a' (NonEmptyStack 'b' (NonEmptyStack 'c' EmptyStack)))
 
   it "example of a LIFO move" $
     move Lifo 3 ['d', 'n', 'z'] ['p'] `shouldBe` ([], ['z', 'n', 'd', 'p'])
 
-  it "example of a LIFO move with a number of elements greater than the size of the source" $
+  it "example of a LIFO move with n > size source" $
     move Lifo 10 ['d', 'n', 'z'] ['p'] `shouldBe` ([], ['z', 'n', 'd', 'p'])
 
   it "example of a FIFO move" $
     move Fifo 3 ['d', 'n', 'z'] ['p'] `shouldBe` ([], ['d', 'n', 'z', 'p'])
 
-  it "example of peak (nonempty case)" $
+  it "example: peek on a nonempty stack" $
     peek ['d', 'n', 'z'] `shouldBe` Just 'd'
 
-  it "example of peak (empty case)" $
+  it "example: peek on EmptyStack" $
     peek ([] :: Stack Int) `shouldBe` Nothing
