@@ -46,18 +46,6 @@ spec = do
   prop "cyclic property of pushN and popN" $ \as s ->
     popN (length as) ((pushN s as) :: Stack Int) `shouldBe` (as, s)
 
-  it "popN 0 returns no elements and leaves the stack unchanged" $
-    popN 0 ([1, 2, 3] :: Stack Int) `shouldBe` ([], [1, 2, 3])
-
-  it "popN with a negative count returns no elements and leaves the stack unchanged" $
-    popN (-2) ([1, 2, 3] :: Stack Int) `shouldBe` ([], [1, 2, 3])
-
-  it "popN larger than the stack size returns all elements and empties the stack" $
-    popN 10 ([1, 2, 3] :: Stack Int) `shouldBe` ([1, 2, 3], EmptyStack)
-
-  it "popN on an empty stack returns an empty result and empty remainder" $
-    popN 3 (EmptyStack :: Stack Int) `shouldBe` ([], EmptyStack)
-
   prop "move and reverse move brings back the original stacks (if the source stack has enough items)" $ \n o s d ->
     (n > 0)
       ==> let
@@ -73,6 +61,26 @@ spec = do
      in
       size s + size d `shouldBe` size s' + size d'
 
+  prop "move n elements in LIFO order is the same as moving one element n times" $ \n s d ->
+    let
+      s', d' :: Stack Int
+      (s', d') = move Lifo n s d
+      (s'', d'') = foldl' step (s, d) ([1 .. n] :: [Int])
+      step (a, b) _ = move Lifo 1 a b
+     in
+      (s', d') `shouldBe` (s'', d'')
+
+  prop "move n elements in FIFO order moves the top part of the stack from source to destination" $ \n s d ->
+    (n > 0)
+      ==> let
+            n' = min n (size s)
+            d' :: Stack Int
+            (_, d') = move Fifo n s d
+            (as, _) = popN n s
+            (as', d'') = popN n' d'
+           in
+            (as, d) `shouldBe` (as', d'')
+
   prop "move with n <= 0 leaves both stacks unchanged" $ \n o s1 s2 ->
     (n <= 0) ==> move o n s1 s2 `shouldBe` ((s1, s2) :: (Stack Int, Stack Int))
 
@@ -81,6 +89,18 @@ spec = do
 
   prop "moving one element does not depend on fifo/lifo" $ \s d ->
     move Fifo 1 s d `shouldBe` ((move Lifo 1 s d) :: (Stack Int, Stack Int))
+
+  it "popN 0 returns no elements and leaves the stack unchanged" $
+    popN 0 ([1, 2, 3] :: Stack Int) `shouldBe` ([], [1, 2, 3])
+
+  it "popN with a negative count returns no elements and leaves the stack unchanged" $
+    popN (-2) ([1, 2, 3] :: Stack Int) `shouldBe` ([], [1, 2, 3])
+
+  it "popN larger than the stack size returns all elements and empties the stack" $
+    popN 10 ([1, 2, 3] :: Stack Int) `shouldBe` ([1, 2, 3], EmptyStack)
+
+  it "popN on an empty stack returns an empty result and empty remainder" $
+    popN 3 (EmptyStack :: Stack Int) `shouldBe` ([], EmptyStack)
 
   it "check list syntax for stacks" $
     ['a', 'b', 'c'] `shouldBe` (NonEmptyStack 'a' (NonEmptyStack 'b' (NonEmptyStack 'c' EmptyStack)))
