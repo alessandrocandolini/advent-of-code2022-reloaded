@@ -3,6 +3,7 @@
 module Data.StackSpec where
 
 import Data.Maybe (isNothing)
+import Data.Monoid (Endo (Endo, appEndo))
 import Data.Stack
 import GHC.IsList (IsList (toList), fromList)
 import Test.Hspec
@@ -65,8 +66,7 @@ spec = do
     let
       s', d' :: Stack Int
       (s', d') = move Lifo n s d
-      (s'', d'') = foldl' step (s, d) ([1 .. n] :: [Int])
-      step (a, b) _ = move Lifo 1 a b
+      (s'', d'') = appEndo (foldMap (const (Endo (uncurry (move Lifo 1)))) ([1 .. n] :: [Int])) (s, d)
      in
       (s', d') `shouldBe` (s'', d'')
 
