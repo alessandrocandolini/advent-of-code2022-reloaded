@@ -44,7 +44,7 @@ spec = do
     popN 3 (NonEmptyStack a1 (NonEmptyStack a2 (NonEmptyStack a3 s))) `shouldBe` ([a1, a2, a3] :: [Int], s)
 
   prop "cyclic property of pushN and popN" $ \as s ->
-    popN (length as) ((pushN s as) :: Stack Int) `shouldBe` (as, s)
+    popN (length as) (pushN s as) `shouldBe` ((as, s) :: ([Int], Stack Int))
 
   prop "move and reverse move brings back the original stacks (if the source stack has enough items)" $ \n o s d ->
     (n > 0)
@@ -81,8 +81,11 @@ spec = do
            in
             (as, d) `shouldBe` (as', d'')
 
-  prop "move with n <= 0 leaves both stacks unchanged" $ \n o s1 s2 ->
-    (n <= 0) ==> move o n s1 s2 `shouldBe` ((s1, s2) :: (Stack Int, Stack Int))
+  prop "move 1 element is the same in FIFO or LIFO order" $ \s d ->
+    move Fifo 1 s d `shouldBe` ((move Lifo 1 s d) :: (Stack Int, Stack Int))
+
+  prop "move with n <= 0 leaves both stacks unchanged" $ \n o s d ->
+    (n <= 0) ==> move o n s d `shouldBe` ((s, d) :: (Stack Int, Stack Int))
 
   prop "moving from an empty source leaves both stacks unchanged" $ \n o s ->
     move o n EmptyStack s `shouldBe` ((EmptyStack, s) :: (Stack Int, Stack Int))
@@ -91,16 +94,16 @@ spec = do
     move Fifo 1 s d `shouldBe` ((move Lifo 1 s d) :: (Stack Int, Stack Int))
 
   it "popN 0 returns no elements and leaves the stack unchanged" $
-    popN 0 ([1, 2, 3] :: Stack Int) `shouldBe` ([], [1, 2, 3])
+    popN 0 [1, 2, 3] `shouldBe` (([], [1, 2, 3]) :: ([Int], Stack Int))
 
   it "popN with a negative count returns no elements and leaves the stack unchanged" $
-    popN (-2) ([1, 2, 3] :: Stack Int) `shouldBe` ([], [1, 2, 3])
+    popN (-2) [1, 2, 3] `shouldBe` (([], [1, 2, 3]) :: ([Int], Stack Int))
 
   it "popN larger than the stack size returns all elements and empties the stack" $
-    popN 10 ([1, 2, 3] :: Stack Int) `shouldBe` ([1, 2, 3], EmptyStack)
+    popN 10 [1, 2, 3] `shouldBe` (([1, 2, 3], EmptyStack) :: ([Int], Stack Int))
 
   it "popN on an empty stack returns an empty result and empty remainder" $
-    popN 3 (EmptyStack :: Stack Int) `shouldBe` ([], EmptyStack)
+    popN 3 EmptyStack `shouldBe` (([], EmptyStack) :: ([Int], Stack Int))
 
   it "check list syntax for stacks" $
     ['a', 'b', 'c'] `shouldBe` (NonEmptyStack 'a' (NonEmptyStack 'b' (NonEmptyStack 'c' EmptyStack)))
