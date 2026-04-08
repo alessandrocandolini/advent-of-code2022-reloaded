@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.Stack where
@@ -5,7 +6,7 @@ module Data.Stack where
 import Data.List (unfoldr)
 import GHC.Exts (IsList (fromList, toList), Item)
 
-data Stack a = EmptyStack | NonEmptyStack a (Stack a) deriving (Eq, Show)
+data Stack a = EmptyStack | NonEmptyStack a (Stack a) deriving (Eq, Show, Functor)
 
 isEmpty :: Stack a -> Bool
 isEmpty EmptyStack = True
@@ -60,6 +61,15 @@ move o n source destination =
       Fifo -> pushN destination as
    in
     (source', destination')
+
+shuffle :: StackOrder -> Int -> Stack a -> Stack a
+shuffle Fifo _ source = source
+shuffle Lifo n source =
+  let
+    (as, source') = popN n source
+    source'' = pushNRev source' as
+   in
+    source''
 
 instance IsList (Stack a) where
   type Item (Stack a) = a
