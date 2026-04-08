@@ -53,13 +53,20 @@ insertOrUpdateStacksByMove m s d c =
     c''
 
 rearrange :: StackOrder -> Move -> Cargo a -> Cargo a
-rearrange o m c =
-  let
-    (s, d) = getStacksByMove m c
-    (s', d') = move o (count m) s d
-    c' = insertOrUpdateStacksByMove m s' d' c
-   in
-    c'
+rearrange o m c
+  | from m == to m =
+      let
+        pos = from m
+        s = getStackAtPosition pos c
+        s' = shuffle o (count m) s
+       in
+        insertOrUpdateStackAtPosition pos s' c
+  | otherwise =
+      let
+        (s, d) = getStacksByMove m c
+        (s', d') = move o (count m) s d
+       in
+        insertOrUpdateStacksByMove m s' d' c
 
 rearrangeAll :: StackOrder -> NonEmpty Move -> Cargo a -> Cargo a
 rearrangeAll o = appEndo . foldMap (Endo . rearrange o) . N.reverse

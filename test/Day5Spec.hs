@@ -87,6 +87,14 @@ spec = describe "Day 5" $ do
      in
       rearrange Lifo (Move 3 1 4) initial `shouldBe` final
 
+  it "perform a valid multi element LIFO re-arrange on the same stack should reverse the top of the stack" $
+    let
+      initial, final :: Cargo Crate
+      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
+      final = [(1, Crate <$> ['Z', 'N', 'D']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
+     in
+      rearrange Lifo (Move 3 1 1) initial `shouldBe` final
+
   it "perform a valid single FIFO re-arrange between two different existing stacks (behaviour must be the same as LIFO for a single element)" $
     let
       expected :: Cargo Crate
@@ -117,6 +125,13 @@ spec = describe "Day 5" $ do
       final = [(1, []), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, Crate <$> ['D', 'N', 'Z'])]
      in
       rearrange Fifo (Move 3 1 4) initial `shouldBe` final
+
+  it "perform a valid multi element FIFO re-arrange on the same stack should leave the stack unchanged" $
+    let
+      initial :: Cargo Crate
+      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
+     in
+      rearrange Fifo (Move 3 1 1) initial `shouldBe` initial
 
   it "solve1 on a cargo that contains empty lines" $
     let

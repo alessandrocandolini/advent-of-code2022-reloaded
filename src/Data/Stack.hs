@@ -62,6 +62,15 @@ move o n source destination =
    in
     (source', destination')
 
+shuffle :: StackOrder -> Int -> Stack a -> Stack a
+shuffle Fifo _ source = source
+shuffle Lifo n source =
+  let
+    (as, source') = popN n source
+    source'' = pushNRev source' as
+   in
+    source''
+
 instance IsList (Stack a) where
   type Item (Stack a) = a
   fromList = pushN EmptyStack
