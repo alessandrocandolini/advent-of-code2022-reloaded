@@ -5,23 +5,61 @@ module Day5Spec where
 
 import qualified Data.IntMap as M
 import Data.List.NonEmpty (NonEmpty)
-import Data.Stack
+import Data.Stack (
+  Stack (EmptyStack, NonEmptyStack),
+  StackOrder (Fifo, Lifo),
+ )
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import Day5
-import NeatInterpolation (trimming)
-import Test.Hspec
-import Test.Hspec.QuickCheck
-import Test.QuickCheck
+import Day5 (
+  Cargo (Cargo),
+  Crate (Crate),
+  Input (Input),
+  Move (Move),
+  Solution (Solution),
+  cargoParser,
+  crateParser,
+  cratesParser,
+  cratesRowParser,
+  movesParser,
+  parse,
+  parser,
+  rearrange,
+  solve,
+  solve1,
+  solve2,
+ )
+import NeatInterpolation (trimming, untrimming)
+import Test.Hspec (Spec, describe, it, shouldBe)
 
 input :: T.Text
 input =
-  [trimming|
+  T.drop
+    1
+    [untrimming|
     [D]
 [N] [C]
 [Z] [M] [P]
  1   2   3
 
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+|]
+
+inputPart1 :: T.Text
+inputPart1 =
+  T.drop
+    1
+    [untrimming|
+    [D]
+[N] [C]
+[Z] [M] [P]
+ 1   2   3|]
+
+inputPart2 :: T.Text
+inputPart2 =
+  [trimming|
 move 1 from 2 to 1
 move 3 from 1 to 3
 move 2 from 2 to 1
@@ -137,43 +175,52 @@ spec = describe "Day 5" $ do
     let
       s = "[C]"
      in
-      parse crateParser "" s `shouldBe` Right (Crate 'C')
-
-  it "parse optional crates when they are all defined (and no spaces in between)" $
-    let
-      s = "[C][D][E][F]"
-     in
-      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
+      parse crateParser s `shouldBe` Right (Crate 'C')
 
   it "parse optional crates when they are all defined (and spaces in between)" $
     let
       s = "[C] [D] [E] [F]"
      in
-      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
+      parse cratesRowParser s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
 
-  it "parse optional crates when they are all defined (and spaces in between, at the beginning and at the end)" $
+  it "parse optional crates when they are all defined (and spaces in between and at the end)" $
     let
-      s = " [C] [D] [E] [F] "
+      s = "[C] [D] [E] [F]"
      in
-      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
+      parse cratesRowParser s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
 
   it "parse optional crates when they are not all defined" $
     let
-      s = "[C] [D]     [E]     [F] "
+      s = "[C] [D]     [E]     [F]"
      in
-      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Nothing, Just (Crate 'E'), Nothing, Just (Crate 'F')]
+      parse cratesRowParser s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Nothing, Just (Crate 'E'), Nothing, Just (Crate 'F')]
 
-  it "parse optional crates when they are not all defined, starting and ending with undefined" $
+  it "parse optional crates when they are not all defined, starting and ending with undefined (no extra space at the end)" $
     let
       s = "    [C] [D] [E]     [F]    "
      in
-      parse cratesRowParser "" s `shouldBe` Right [Nothing, Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Nothing, Just (Crate 'F'), Nothing]
+      parse cratesRowParser s `shouldBe` Right [Nothing, Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Nothing, Just (Crate 'F'), Nothing]
 
-  it "parse optional crates when they are not all defined, starting and ending with undefined, in presence of additional space at the beginning and at the end" $
+  it "parse optional crates from multiple lines" $
     let
-      s = "     [C] [D] [E]     [F]     "
+      s = T.pack $ unlines ["    [D]    ", "[N] [C]    ", "[Z] [M] [P]"]
+      expected :: NonEmpty (NonEmpty (Maybe Crate))
+      expected =
+        [ [Nothing, Just (Crate 'D'), Nothing]
+        , [Just (Crate 'N'), Just (Crate 'C'), Nothing]
+        , [Just (Crate 'Z'), Just (Crate 'M'), Just (Crate 'P')]
+        ]
      in
-      parse cratesRowParser "" s `shouldBe` Right [Nothing, Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Nothing, Just (Crate 'F'), Nothing]
+      parse cratesParser s `shouldBe` Right expected
+
+  it "parse cargo" $
+    parse cargoParser inputPart1 `shouldBe` Right cargo
+
+  it "parse moves" $
+    parse movesParser inputPart2 `shouldBe` Right moves
+
+  it "parse input" $
+    parse parser input `shouldBe` Right (Input cargo moves)
 
   it "solve1 on a cargo that contains empty lines" $
     let

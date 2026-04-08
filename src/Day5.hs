@@ -3,23 +3,30 @@
 
 module Day5 where
 
-import Control.Applicative.Combinators (many, optional, (<|>))
-import Control.Monad.Combinators (between)
+import Control.Applicative (optional)
+import Control.Applicative.Combinators (between, count, (<|>))
+import Control.Applicative.Combinators.NonEmpty (endBy1, sepBy1, sepEndBy1)
 import Data.Bifunctor (Bifunctor (first))
 import Data.Functor (($>))
 import qualified Data.IntMap as M
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as N
 import Data.Maybe (fromMaybe)
-import Data.Monoid (Endo (Endo, appEndo), Sum (Sum))
-import Data.Stack
+import Data.Monoid (Endo (Endo, appEndo))
+import Data.Stack (
+  Stack (EmptyStack),
+  StackOrder (..),
+  move,
+  peek,
+  shuffle,
+ )
 import qualified Data.Text as T
 import Data.Void (Void)
 import GHC.Exts (IsList (fromList, toList), Item)
-import Text.Megaparsec (MonadParsec (eof), Parsec, count, errorBundlePretty, runParser)
+import Text.Megaparsec (MonadParsec (eof), Parsec, errorBundlePretty, runParser)
 import Text.Megaparsec.Char (char, letterChar, newline)
 import Text.Megaparsec.Char.Lexer (decimal)
-import Witherable (mapMaybe)
+import Witherable (catMaybes, mapMaybe)
 
 data Solution = Solution {solution1 :: String, solution2 :: String} deriving (Eq, Show)
 
@@ -96,21 +103,36 @@ crateParser :: Parser Crate
 crateParser = Crate <$> between (char '[') (char ']') letterChar
 
 maybeCrateParser :: Parser (Maybe Crate)
-maybeCrateParser = (Just <$> crateParser) <|> emptyCrateParser
- where
-  emptyCrateParser = count 3 (char ' ') $> Nothing
+maybeCrateParser = (Just <$> crateParser) <|> (Nothing <$ "   ")
 
-cratesRowParser :: Parser [Maybe Crate]
-cratesRowParser = (char ' ') *> many (maybeCrateParser <* optional (char ' '))
+cratesRowParser :: Parser (NonEmpty (Maybe Crate))
+cratesRowParser = sepBy1 maybeCrateParser (char ' ')
+
+cratesParser :: Parser (NonEmpty (NonEmpty (Maybe Crate)))
+cratesParser = endBy1 cratesRowParser newline
+
+numbersParser :: Parser (NonEmpty Int)
+numbersParser = sepBy1 indexParser (char ' ')
+ where
+  indexParser = char ' ' *> decimal <* optional (char ' ')
+
+cargoParser :: Parser (Cargo Crate)
+cargoParser = (flip postProcessing) <$> cratesParser <*> numbersParser
+
+postProcessing :: NonEmpty Int -> NonEmpty (NonEmpty (Maybe Crate)) -> Cargo Crate
+postProcessing numbers = fromList . toList . N.zip numbers . fmap (fromList . catMaybes . toList) . N.transpose
 
 moveParser :: Parser Move
-moveParser = undefined
+moveParser = Move <$> ("move " *> decimal <* " from ") <*> (decimal <* " to ") <*> decimal
 
-inputParser :: Parser Input
-inputParser = undefined
+movesParser :: Parser (NonEmpty Move)
+movesParser = sepEndBy1 moveParser newline
+
+parser :: Parser Input
+parser = Input <$> (cargoParser <* newline <* newline) <*> (movesParser <* eof)
 
 parseInput :: T.Text -> Either String Input
-parseInput = parse inputParser "Day 1 parsing"
+parseInput = parse parser
 
-parse :: Parser a -> String -> T.Text -> Either String a
-parse parser message = first errorBundlePretty . runParser parser message
+parse :: Parser a -> T.Text -> Either String a
+parse p = first errorBundlePretty . runParser p "Day 5 parsing"
