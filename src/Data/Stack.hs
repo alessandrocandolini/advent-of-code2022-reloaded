@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.Stack where
@@ -5,7 +6,7 @@ module Data.Stack where
 import Data.List (unfoldr)
 import GHC.Exts (IsList (fromList, toList), Item)
 
-data Stack a = EmptyStack | NonEmptyStack a (Stack a) deriving (Eq, Show)
+data Stack a = EmptyStack | NonEmptyStack a (Stack a) deriving (Eq, Show, Functor)
 
 isEmpty :: Stack a -> Bool
 isEmpty EmptyStack = True
