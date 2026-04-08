@@ -4,10 +4,9 @@
 module Day5 where
 
 import Control.Applicative (optional)
-import Control.Applicative.Combinators (between, count, (<|>))
+import Control.Applicative.Combinators (between, (<|>))
 import Control.Applicative.Combinators.NonEmpty (endBy1, sepBy1, sepEndBy1)
 import Data.Bifunctor (Bifunctor (first))
-import Data.Functor (($>))
 import qualified Data.IntMap as M
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as N

@@ -8,6 +8,7 @@ data Command
   = Solve Args
   | Generate GenerateArgs
   | GetStats StatsArgs
+  | Interactive Args
   deriving (Eq, Show)
 
 data Args = Args
@@ -87,6 +88,7 @@ commandParser =
     ( command "solve" (info (Solve <$> argsParser) (progDesc "solve the puzzle for the selected day"))
         <> command "generate" (info (Generate <$> generateArgsParser) (progDesc "generate scaffolding from template for a given day"))
         <> command "stats" (info (GetStats <$> statsArgsParser) (progDesc "retrieve stats from the AOC website"))
+        <> command "interactive" (info (Interactive <$> argsParser) (progDesc "interactive solution (only available for some days)"))
     )
 
 withInfo :: Parser a -> String -> ParserInfo a

@@ -31,3 +31,9 @@ spec = describe "Args parser" $ do
 
   it "is able to parse a valid command to retrieve stats (with export and without year)" $
     parseArgsMaybe ["stats", "--json"] `shouldBe` Right (GetStats (StatsArgs 2024 JsonRender))
+
+  it "is able to parse a valid command to interactively solve the puzzle from file" $
+    parseArgsMaybe ["interactive", "-d", "1", "-f", "file"] `shouldBe` Right (Interactive (Args 1 (FromFile "file")))
+
+  it "is able to parse a valid command to interactively solve the puzzle from standard input" $
+    parseArgsMaybe ["interactive", "-d", "1", "--with-input"] `shouldBe` Right (Interactive (Args 1 FromStdInput))
