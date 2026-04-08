@@ -3,19 +3,21 @@
 
 module Day5 where
 
+import Control.Applicative.Combinators (many, optional, (<|>))
+import Control.Monad.Combinators (between)
 import Data.Bifunctor (Bifunctor (first))
+import Data.Functor (($>))
 import qualified Data.IntMap as M
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as N
 import Data.Maybe (fromMaybe)
 import Data.Monoid (Endo (Endo, appEndo), Sum (Sum))
-import Data.Ord (Down (Down), comparing)
 import Data.Stack
 import qualified Data.Text as T
 import Data.Void (Void)
 import GHC.Exts (IsList (fromList, toList), Item)
-import Text.Megaparsec (MonadParsec (eof), Parsec, errorBundlePretty, runParser)
-import Text.Megaparsec.Char (newline)
+import Text.Megaparsec (MonadParsec (eof), Parsec, count, errorBundlePretty, runParser)
+import Text.Megaparsec.Char (char, letterChar, newline)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Witherable (mapMaybe)
 
@@ -33,7 +35,7 @@ instance IsList (Cargo a) where
 peeks :: Cargo a -> [a]
 peeks = mapMaybe peek . M.elems . stacks
 
-data Move = Move {count :: Int, from :: Int, to :: Int} deriving (Eq, Show)
+data Move = Move {numberOfElements :: Int, from :: Int, to :: Int} deriving (Eq, Show)
 
 getStackAtPosition :: Int -> Cargo a -> Stack a
 getStackAtPosition p = fromMaybe EmptyStack . M.lookup p . stacks
@@ -58,13 +60,13 @@ rearrange o m c
       let
         pos = from m
         s = getStackAtPosition pos c
-        s' = shuffle o (count m) s
+        s' = shuffle o (numberOfElements m) s
        in
         insertOrUpdateStackAtPosition pos s' c
   | otherwise =
       let
         (s, d) = getStacksByMove m c
-        (s', d') = move o (count m) s d
+        (s', d') = move o (numberOfElements m) s d
        in
         insertOrUpdateStacksByMove m s' d' c
 
@@ -83,7 +85,7 @@ solveCommon :: StackOrder -> Input -> String
 solveCommon order (Input cargo moves) = fmap unwrapCrate (peeks (rearrangeAll order moves cargo))
 
 solve :: T.Text -> Either String Solution
-solve = fmap (Solution <$> solve1 <*> solve2) . parse
+solve = fmap (Solution <$> solve1 <*> solve2) . parseInput
 
 program :: T.Text -> IO ()
 program = print . solve
@@ -91,13 +93,24 @@ program = print . solve
 type Parser = Parsec Void T.Text
 
 crateParser :: Parser Crate
-crateParser = undefined
+crateParser = Crate <$> between (char '[') (char ']') letterChar
+
+maybeCrateParser :: Parser (Maybe Crate)
+maybeCrateParser = (Just <$> crateParser) <|> emptyCrateParser
+ where
+  emptyCrateParser = count 3 (char ' ') $> Nothing
+
+cratesRowParser :: Parser [Maybe Crate]
+cratesRowParser = (char ' ') *> many (maybeCrateParser <* optional (char ' '))
 
 moveParser :: Parser Move
 moveParser = undefined
 
-parser :: Parser Input
-parser = undefined
+inputParser :: Parser Input
+inputParser = undefined
 
-parse :: T.Text -> Either String Input
-parse = first errorBundlePretty . runParser parser "Day 1 parsing"
+parseInput :: T.Text -> Either String Input
+parseInput = parse inputParser "Day 1 parsing"
+
+parse :: Parser a -> String -> T.Text -> Either String a
+parse parser message = first errorBundlePretty . runParser parser message

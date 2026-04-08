@@ -133,6 +133,48 @@ spec = describe "Day 5" $ do
      in
       rearrange Fifo (Move 3 1 1) initial `shouldBe` initial
 
+  it "parse single crate" $
+    let
+      s = "[C]"
+     in
+      parse crateParser "" s `shouldBe` Right (Crate 'C')
+
+  it "parse optional crates when they are all defined (and no spaces in between)" $
+    let
+      s = "[C][D][E][F]"
+     in
+      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
+
+  it "parse optional crates when they are all defined (and spaces in between)" $
+    let
+      s = "[C] [D] [E] [F]"
+     in
+      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
+
+  it "parse optional crates when they are all defined (and spaces in between, at the beginning and at the end)" $
+    let
+      s = " [C] [D] [E] [F] "
+     in
+      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Just (Crate 'F')]
+
+  it "parse optional crates when they are not all defined" $
+    let
+      s = "[C] [D]     [E]     [F] "
+     in
+      parse cratesRowParser "" s `shouldBe` Right [Just (Crate 'C'), Just (Crate 'D'), Nothing, Just (Crate 'E'), Nothing, Just (Crate 'F')]
+
+  it "parse optional crates when they are not all defined, starting and ending with undefined" $
+    let
+      s = "    [C] [D] [E]     [F]    "
+     in
+      parse cratesRowParser "" s `shouldBe` Right [Nothing, Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Nothing, Just (Crate 'F'), Nothing]
+
+  it "parse optional crates when they are not all defined, starting and ending with undefined, in presence of additional space at the beginning and at the end" $
+    let
+      s = "     [C] [D] [E]     [F]     "
+     in
+      parse cratesRowParser "" s `shouldBe` Right [Nothing, Just (Crate 'C'), Just (Crate 'D'), Just (Crate 'E'), Nothing, Just (Crate 'F'), Nothing]
+
   it "solve1 on a cargo that contains empty lines" $
     let
       moves' = [move1, move2, move3]
@@ -150,3 +192,6 @@ spec = describe "Day 5" $ do
 
   it "solve2" $
     solve2 (Input cargo moves) `shouldBe` "MCD"
+
+  it "solve" $
+    solve input `shouldBe` Right (Solution "CMZ" "MCD")
