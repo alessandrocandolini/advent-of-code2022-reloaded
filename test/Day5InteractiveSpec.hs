@@ -1,12 +1,11 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
-
 module Day5InteractiveSpec where
 
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Text as T
 import Day5
-import NeatInterpolation (trimming, untrimming)
+import NeatInterpolation (untrimming)
 import Test.Hspec (Spec, describe, it, shouldBe)
 
 input :: T.Text
@@ -25,8 +24,8 @@ move 2 from 2 to 1
 move 1 from 1 to 2
 |]
 
-cargo :: Cargo Crate
-cargo = [(1, Crate <$> ['N', 'Z']), (2, Crate <$> ['D', 'C', 'M']), (3, Crate <$> ['P'])]
+sampleCargo :: Cargo Crate
+sampleCargo = [(1, Crate <$> ['N', 'Z']), (2, Crate <$> ['D', 'C', 'M']), (3, Crate <$> ['P'])]
 
 move1, move2, move3, move4 :: Move
 move1 = Move 1 2 1

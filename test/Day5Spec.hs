@@ -28,6 +28,7 @@ import Day5 (
   solve1,
   solve2,
  )
+import Day5CargoQQ (cargo)
 import NeatInterpolation (trimming, untrimming)
 import Test.Hspec (Spec, describe, it, shouldBe)
 
@@ -66,8 +67,8 @@ move 2 from 2 to 1
 move 1 from 1 to 2
 |]
 
-cargo :: Cargo Crate
-cargo = [(1, Crate <$> ['N', 'Z']), (2, Crate <$> ['D', 'C', 'M']), (3, Crate <$> ['P'])]
+sampleCargo :: Cargo Crate
+sampleCargo = [(1, Crate <$> ['N', 'Z']), (2, Crate <$> ['D', 'C', 'M']), (3, Crate <$> ['P'])]
 
 move1, move2, move3, move4 :: Move
 move1 = Move 1 2 1
@@ -92,82 +93,208 @@ spec = describe "Day 5" $ do
               ]
           )
      in
-      cargo `shouldBe` expected
+      sampleCargo `shouldBe` expected
+
+  it "confirm cargo quasiquoter works as intended" $
+    let
+      expected :: Cargo Crate
+      expected =
+        Cargo
+          ( M.fromList
+              [ (1, NonEmptyStack (Crate 'N') (NonEmptyStack (Crate 'Z') EmptyStack))
+              , (2, NonEmptyStack (Crate 'D') (NonEmptyStack (Crate 'C') (NonEmptyStack (Crate 'M') EmptyStack)))
+              , (3, NonEmptyStack (Crate 'P') EmptyStack)
+              ]
+          )
+      cargoViaQQ :: Cargo Crate
+      cargoViaQQ =
+        [cargo|
+            [D]
+        [N] [C]
+        [Z] [M] [P]
+         1   2   3
+        |]
+     in
+      cargoViaQQ `shouldBe` expected
 
   it "perform a valid single LIFO re-arrange between two different existing stacks" $
     let
       expected :: Cargo Crate
-      expected = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P'])]
+      expected =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3
+        |]
      in
-      rearrange Lifo (Move 1 2 1) cargo `shouldBe` expected
+      rearrange Lifo (Move 1 2 1) sampleCargo `shouldBe` expected
 
   it "perform a valid multi element LIFO re-arrange between two different existing stacks" $
     let
       initial, final :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P'])]
-      final = [(1, []), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['Z', 'N', 'D', 'P'])]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3
+        |]
+      final =
+        [cargo|
+                  [Z]
+                  [N]
+              [C] [D]
+              [M] [P]
+           1   2   3
+        |]
      in
       rearrange Lifo (Move 3 1 3) initial `shouldBe` final
 
   it "perform a valid multi element LIFO re-arrange between two different stacks, one of which does not exist" $
     let
       initial, final :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P'])]
-      final = [(1, []), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, Crate <$> ['Z', 'N', 'D'])]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3
+        |]
+      final =
+        [cargo|
+                      [Z]
+              [C]     [N]
+              [M] [P] [D]
+           1   2   3   4
+        |]
      in
       rearrange Lifo (Move 3 1 4) initial `shouldBe` final
 
   it "perform a valid multi element LIFO re-arrange between two different stacks, one of which is empty" $
     let
       initial, final :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
-      final = [(1, []), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, Crate <$> ['Z', 'N', 'D'])]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3   4
+        |]
+      final =
+        [cargo|
+                      [Z]
+              [C]     [N]
+              [M] [P] [D]
+           1   2   3   4
+        |]
      in
       rearrange Lifo (Move 3 1 4) initial `shouldBe` final
 
   it "perform a valid multi element LIFO re-arrange on the same stack should reverse the top of the stack" $
     let
       initial, final :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
-      final = [(1, Crate <$> ['Z', 'N', 'D']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3
+        |]
+      final =
+        [cargo|
+          [Z]
+          [N] [C]
+          [D] [M] [P]
+           1   2   3
+        |]
      in
       rearrange Lifo (Move 3 1 1) initial `shouldBe` final
 
   it "perform a valid single FIFO re-arrange between two different existing stacks (behaviour must be the same as LIFO for a single element)" $
     let
       expected :: Cargo Crate
-      expected = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P'])]
+      expected =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3
+        |]
      in
-      rearrange Fifo (Move 1 2 1) cargo `shouldBe` expected
+      rearrange Fifo (Move 1 2 1) sampleCargo `shouldBe` expected
 
   it "perform a valid multi element FIFO re-arrange between two different existing stacks" $
     let
       initial, final :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P'])]
-      final = [(1, []), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['D', 'N', 'Z', 'P'])]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3
+        |]
+      final =
+        [cargo|
+                  [D]
+                  [N]
+              [C] [Z]
+              [M] [P]
+           1   2   3
+        |]
      in
       rearrange Fifo (Move 3 1 3) initial `shouldBe` final
 
   it "perform a valid multi element FIFO re-arrange between two different stacks, one of which does not exist" $
     let
       initial, final :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P'])]
-      final = [(1, []), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, Crate <$> ['D', 'N', 'Z'])]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3
+        |]
+      final =
+        [cargo|
+                      [D]
+              [C]     [N]
+              [M] [P] [Z]
+           1   2   3   4
+        |]
      in
       rearrange Fifo (Move 3 1 4) initial `shouldBe` final
 
   it "perform a valid multi element FIFO re-arrange between two different stacks, one of which is empty" $
     let
       initial, final :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
-      final = [(1, []), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, Crate <$> ['D', 'N', 'Z'])]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3   4
+        |]
+      final =
+        [cargo|
+                      [D]
+              [C]     [N]
+              [M] [P] [Z]
+           1   2   3   4
+        |]
      in
       rearrange Fifo (Move 3 1 4) initial `shouldBe` final
 
   it "perform a valid multi element FIFO re-arrange on the same stack should leave the stack unchanged" $
     let
       initial :: Cargo Crate
-      initial = [(1, Crate <$> ['D', 'N', 'Z']), (2, Crate <$> ['C', 'M']), (3, Crate <$> ['P']), (4, EmptyStack)]
+      initial =
+        [cargo|
+          [D]
+          [N] [C]
+          [Z] [M] [P]
+           1   2   3   4
+        |]
      in
       rearrange Fifo (Move 3 1 1) initial `shouldBe` initial
 
@@ -214,31 +341,31 @@ spec = describe "Day 5" $ do
       parse cratesParser s `shouldBe` Right expected
 
   it "parse cargo" $
-    parse cargoParser inputPart1 `shouldBe` Right cargo
+    parse cargoParser inputPart1 `shouldBe` Right sampleCargo
 
   it "parse moves" $
     parse movesParser inputPart2 `shouldBe` Right moves
 
   it "parse input" $
-    parse parser input `shouldBe` Right (Input cargo moves)
+    parse parser input `shouldBe` Right (Input sampleCargo moves)
 
   it "solve1 on a cargo that contains empty lines" $
     let
       moves' = [move1, move2, move3]
      in
-      solve1 (Input cargo moves') `shouldBe` "MZ"
+      solve1 (Input sampleCargo moves') `shouldBe` "MZ"
 
   it "solve1" $
-    solve1 (Input cargo moves) `shouldBe` "CMZ"
+    solve1 (Input sampleCargo moves) `shouldBe` "CMZ"
 
   it "solve2 on a cargo that contains empty lines" $
     let
       moves' = [move1, move2, move3]
      in
-      solve2 (Input cargo moves') `shouldBe` "CD"
+      solve2 (Input sampleCargo moves') `shouldBe` "CD"
 
   it "solve2" $
-    solve2 (Input cargo moves) `shouldBe` "MCD"
+    solve2 (Input sampleCargo moves) `shouldBe` "MCD"
 
   it "solve" $
     solve input `shouldBe` Right (Solution "CMZ" "MCD")
