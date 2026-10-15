@@ -4,6 +4,7 @@ import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import qualified Data.Text as T
 import qualified Day1 as Day1
+import qualified Day10 as Day10
 import qualified Day5 as Day5
 import qualified Day5Interactive as Day5Interactive
 
@@ -12,6 +13,7 @@ solutions =
   M.fromList
     [ (1, Day1.program)
     , (5, Day5.program)
+    , (10, Day10.program)
     ]
 interactive :: IntMap (T.Text -> IO ())
 interactive =
