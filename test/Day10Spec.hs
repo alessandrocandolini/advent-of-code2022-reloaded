@@ -185,15 +185,15 @@ spec = describe "Day 10" $ do
   it "parse small input" $
     parse smallInput `shouldBe` Right simpleInstructions
 
-  it "sampledEnv1" $
-    fmap sampledEnv1 (parse input)
+  it "sampledCpu1 on input" $
+    fmap sampledCpu1 (parse input)
       `shouldBe` Right
-        [ Env 21 20
-        , Env 19 60
-        , Env 18 100
-        , Env 21 140
-        , Env 16 180
-        , Env 18 220
+        [ Cpu 21 20
+        , Cpu 19 60
+        , Cpu 18 100
+        , Cpu 21 140
+        , Cpu 16 180
+        , Cpu 18 220
         ]
 
   it "solve" $

@@ -2,7 +2,6 @@
 
 module Day10 where
 
-import Args (withInfo)
 import Control.Applicative ((<|>))
 import Control.Monad.Combinators.NonEmpty (sepEndBy1)
 import Data.Bifunctor (Bifunctor (first))
@@ -11,19 +10,14 @@ import qualified Data.List.NonEmpty as N
 import Data.Monoid (Endo (..))
 import Data.Semigroup (Sum (Sum))
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 import Data.Void (Void)
 import Text.Megaparsec (MonadParsec (eof), Parsec, errorBundlePretty, runParser)
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Lexer (decimal, signed)
 
-data Solution = Solution Signal Signal deriving (Eq, Show)
+data Solution = Solution Strength Strength deriving (Eq, Show)
 
-newtype Signal = Signal Int
-  deriving (Eq, Show, Num) via Int
-  deriving (Semigroup, Monoid) via (Sum Int)
-
-newtype X = X Int
+newtype Register = Register Int
   deriving (Eq, Show, Num) via Int
   deriving (Semigroup, Monoid) via (Sum Int)
 
@@ -31,44 +25,47 @@ newtype Cycle = Cycle Int
   deriving (Eq, Show, Num) via Int
   deriving (Semigroup) via (Sum Int)
 
-strength :: X -> Cycle -> Signal
-strength (X x) (Cycle c) = Signal (c * x)
+newtype Strength = Strength Int
+  deriving (Eq, Show, Num) via Int
+  deriving (Semigroup, Monoid) via (Sum Int)
 
-data Env = Env X Cycle
-  deriving (Eq, Show)
+strength :: Register -> Cycle -> Strength
+strength (Register x) (Cycle c) = Strength (c * x)
 
-initEnv :: Env
-initEnv = Env 1 0
+data Cpu = Cpu Register Cycle deriving (Eq, Show)
 
-data Instruction = NoOpt | AddX X deriving (Eq, Show)
+initCpu :: Cpu
+initCpu = Cpu 1 1
 
-runInstruction :: Instruction -> Env -> NonEmpty Env
-runInstruction NoOpt (Env x c) = N.singleton $ Env x (c <> 1)
-runInstruction (AddX value) (Env x c) = Env x (c <> 1) N.:| [Env (x <> value) (c <> 2)]
+data Instruction = NoOpt | AddX Register deriving (Eq, Show)
 
-runInstruction' :: Instruction -> NonEmpty Env -> NonEmpty Env
-runInstruction' i env = env <> runInstruction i (N.last env)
+runInstruction :: Instruction -> Cpu -> NonEmpty Cpu
+runInstruction NoOpt (Cpu x c) = N.singleton $ Cpu x (c <> 1)
+runInstruction (AddX value) (Cpu x c) = Cpu x (c <> 1) N.:| [Cpu (x <> value) (c <> 2)]
 
-runInstructions :: NonEmpty Instruction -> NonEmpty Env -> NonEmpty Env
+runInstructions :: NonEmpty Instruction -> NonEmpty Cpu -> NonEmpty Cpu
 runInstructions = appEndo . foldMap (Endo . runInstruction') . N.reverse
+ where
+  runInstruction' :: Instruction -> NonEmpty Cpu -> NonEmpty Cpu
+  runInstruction' i env = env <> runInstruction i (N.last env)
 
 isSampleCycle :: Cycle -> Bool
 isSampleCycle (Cycle 20) = True
 isSampleCycle (Cycle n) = (n - 20) `mod` 40 == 0
 
-isSample :: Env -> Bool
-isSample (Env _ c) = isSampleCycle c
+isSample :: Cpu -> Bool
+isSample (Cpu _ c) = isSampleCycle c
 
-strengthFromEnv :: Env -> Signal
-strengthFromEnv (Env x c) = strength x c
+strengthFromCpu :: Cpu -> Strength
+strengthFromCpu (Cpu x c) = strength x c
 
-sampledEnv1 :: NonEmpty Instruction -> [Env]
-sampledEnv1 = N.filter isSample . flip runInstructions (N.singleton initEnv)
+sampledCpu1 :: NonEmpty Instruction -> [Cpu]
+sampledCpu1 = N.filter isSample . flip runInstructions (N.singleton initCpu)
 
-solve1 :: NonEmpty Instruction -> Signal
-solve1 = foldMap strengthFromEnv . sampledEnv1
+solve1 :: NonEmpty Instruction -> Strength
+solve1 = foldMap strengthFromCpu . sampledCpu1
 
-solve2 :: NonEmpty Instruction -> Signal
+solve2 :: NonEmpty Instruction -> Strength
 solve2 = solve1
 
 program :: T.Text -> IO ()
@@ -79,8 +76,8 @@ solve = fmap (Solution <$> solve1 <*> solve2) . parse
 
 type Parser = Parsec Void T.Text
 
-xParser :: Parser X
-xParser = X <$> signed (return ()) decimal
+xParser :: Parser Register
+xParser = Register <$> signed (return ()) decimal
 
 instructionParser :: Parser Instruction
 instructionParser = (NoOpt <$ "noop") <|> (AddX <$> ("addx " *> xParser))
