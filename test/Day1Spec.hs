@@ -11,6 +11,7 @@ import Day1 (
   Elf (Elf),
   Solution (Solution),
   parse,
+  pretty,
   solve,
   solve1,
   solve2,
@@ -77,3 +78,6 @@ spec = describe "Day 1" $ do
 
   it "solution" $
     solve input `shouldBe` Right (Solution 24_000 45_000)
+
+  it "round trip" $
+    pretty elfs `shouldBe` Just input
