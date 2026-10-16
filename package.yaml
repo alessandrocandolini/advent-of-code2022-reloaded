@@ -34,9 +34,6 @@ dependencies:
 - aeson-pretty
 - array
 - tardis
-- layoutz
-- pup
-- stacked
 - prettyprinter
 
 default-extensions:
