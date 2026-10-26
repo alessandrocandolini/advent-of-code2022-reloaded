@@ -1,0 +1,129 @@
+cabal-version: 3.0
+name: advent-of-code2022-reloaded
+version: 0.1.0.0
+synopsis: Advent of Code 2022 solutions
+description: Solutions and tests for Advent of Code 2022.
+build-type: Simple
+
+common shared
+  default-language: Haskell2010
+  default-extensions:
+      OverloadedStrings
+      NumericUnderscores
+  ghc-options:
+      -Wall
+      -Werror=incomplete-patterns
+      -Werror=incomplete-uni-patterns
+      -Wincomplete-record-updates
+      -Wredundant-constraints
+      -Wunused-packages
+  build-depends:
+      adjunctions
+    , aeson
+    , aeson-pretty
+    , algebraic-graphs
+    , ansi-terminal
+    , array
+    , base >=4.7 && <5
+    , bytestring
+    , comonad
+    , containers
+    , data-fix
+    , distributive
+    , either
+    , envparse
+    , hashable
+    , machines
+    , megaparsec
+    , mtl
+    , neat-interpolation
+    , optparse-applicative
+    , parser-combinators
+    , pretty
+    , prettyprinter
+    , recursion-schemes
+    , req
+    , safe
+    , split
+    , tardis
+    , text
+    , unordered-containers
+    , vector
+    , witherable
+
+library
+  import: shared
+  exposed-modules:
+      App
+      Args
+      CodeGenerator
+      Data.Stack
+      Day1
+      Day10
+      Day2
+      Day3
+      Day4
+      Day5
+      Day5Interactive
+      Day6
+      Day7
+      Day8
+      Day9
+      DayN
+      Solutions
+      Stats
+  other-modules:
+      Paths_advent_of_code2022_reloaded
+  autogen-modules:
+      Paths_advent_of_code2022_reloaded
+  hs-source-dirs:
+      src
+
+executable aoc2022
+  import: shared
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends: advent-of-code2022-reloaded
+  main-is: Main.hs
+  other-modules:
+      Paths_advent_of_code2022_reloaded
+  autogen-modules:
+      Paths_advent_of_code2022_reloaded
+  hs-source-dirs:
+      app
+
+test-suite advent-of-code2022-reloaded-test
+  import: shared
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O0
+  build-depends:
+      advent-of-code2022-reloaded
+    , hspec
+    , hspec-discover
+    , QuickCheck
+    , template-haskell
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      AppSpec
+      ArgsSpec
+      Data.StackSpec
+      Day10Spec
+      Day1Spec
+      Day2Spec
+      Day3Spec
+      Day4Spec
+      Day5CargoQQ
+      Day5InteractiveSpec
+      Day5Spec
+      Day6Spec
+      Day7Spec
+      Day8Spec
+      Day9Spec
+      DayNSpec
+      SpecHook
+      Paths_advent_of_code2022_reloaded
+  autogen-modules:
+      Paths_advent_of_code2022_reloaded
+  hs-source-dirs:
+      test
+  build-tool-depends:
+      hspec-discover:hspec-discover

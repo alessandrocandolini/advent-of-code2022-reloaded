@@ -9,81 +9,96 @@ Since then, I’ve learned a thing or two. Time to solve them again in fresh new
 
 ## How to build and run locally
 
-The project uses the [Haskell tool stack](https://docs.haskellstack.org/en/stable/README/). The recommended way to install stack is by using [ghcup](https://www.haskell.org/ghcup/).
-It's also possible to use [the nix package manager](https://nixos.org/), but this project does not provide a nix configuration file.
+The project uses [Cabal](https://cabal.readthedocs.io/) with GHC **9.10.3**.
+Install GHC and cabal-install using [GHCup](https://www.haskell.org/ghcup/).
+CI uses cabal-install **3.18.1.0**.
 
-Assuming `stack` is installed in the system, to **build** the project use
-```
-stack build
-```
-To **build and run the tests**, run
-```
-stack test
-```
-or equivalently
-```
-stack build --test
-```
-For **faster feedback loop** during development, it's possible to run tests continuously on every file change:
-```
-stack test --fast --file-watch
-```
-To run tests with **test coverage** instrumentation,
-```
-stack test --coverage
-```
-which generates a textual and HTML report. Tests are run in the CI and test coverage reports are automatically uploaded to codecov.
+`advent-of-code2022-reloaded.cabal` is the package definition. Edit it directly
+when adding dependencies or modules. For example, after creating
+`src/Example.hs`, add `Example` to the library's `exposed-modules`.
+List new test modules in the test suite's `other-modules`; `hspec-discover`
+continues to discover their specs.
 
-To **run the executable via stack**,
-```
-stack exec aoc2022
-```
-or passing arguments
-```
-stack exec aoc2022 -- solve -d <day> -f <filename>
+`cabal.project` selects the compiler and imports the LTS 24.63 dependency
+constraints used before the migration. `cabal.project.freeze` records the resolved
+versions, flags, and Hackage index state. After intentionally changing dependencies,
+update the constraints as needed, regenerate the freeze file with `cabal freeze`,
+and run the tests.
+
+Update the package index, then build and test:
+
+```bash
+cabal update
+cabal build all
+cabal test all --test-show-details=direct
 ```
 
-To copy the executable to the project root and run it as `./aoc2022`,
-```
-stack build --copy-bins --local-bin-path .
-./aoc2022
+For faster development builds:
+
+```bash
+cabal test all --disable-optimization --test-show-details=direct
 ```
 
-To **install** the executable under `~/.local/bin`,
-```
-stack install
-```
-and the executable can be run with `aoc2022` or passing arguments like
-```
-aoc2022 solve -d 1 -f input
-```
-assuming `~/.local/bin` is in the `$PATH` variable.
+To run tests with coverage instrumentation:
 
-To get more insights into runtime performance, it's possible to extract information from the Haskell RTS:
-```
-aoc2022 solve -d <day> -f <filename> +RTS -s -N1
+```bash
+cabal test all --enable-coverage --test-show-details=direct
 ```
 
-For example, for day 1:
+Cabal prints the location of the HTML coverage report under `dist-newstyle/`.
+CI builds all components, runs the tests with coverage, and uploads the results
+to Codecov.
+
+Run the executable, optionally passing arguments after `--`:
+
+```bash
+cabal run aoc2022 -- --help
+cabal run aoc2022 -- solve -d 1 -f input
 ```
+
+To copy the executable to the project root:
+
+```bash
+cabal build exe:aoc2022
+cp "$(cabal list-bin exe:aoc2022)" ./aoc2022
+./aoc2022 --help
+```
+
+To install it under `~/.local/bin`:
+
+```bash
+cabal install exe:aoc2022 --installdir="$HOME/.local/bin" --install-method=copy --overwrite-policy=always
+```
+
+With that directory on `PATH`, run `aoc2022` directly. Runtime statistics can be
+requested with `+RTS -s -N1`, for example:
+
+```bash
 aoc2022 solve -d 1 -f input +RTS -s -N1
 ```
 
-From standard input:
-```
-aoc2022 solve -d 1 --with-input +RTS -s -N1 < input
+To start GHCi with the library:
+
+```bash
+cabal repl lib:advent-of-code2022-reloaded
 ```
 
-From `pbpaste` on macOS:
-```
-aoc2022 solve -d 1 --with-input +RTS -s -N1 < <(pbpaste)
-```
+### HLS
 
-To run a version of **ghci** compatible with the resolver
-```
-stack ghci
-```
-For more information about how to use `stack`, refer to the [official docs](https://docs.haskellstack.org/en/stable/).
+`hie.yaml` uses a Cabal cradle with `component: all`, and `cabal.project` enables
+tests. This lets HLS load the library, executable, and test suite together;
+multi-component loading requires Cabal 3.12 or newer.
+
+The project's `hls.json` enables multi-component loading and cross-module rename
+for **HLS 2.15**. The `haskell-tools.nvim` plugin reads this file automatically.
+For other clients, set `haskell.componentsLoading = "multi: whole-project"` in
+their HLS settings. On HLS 2.14, use `"sessionLoading": "multipleComponents"`
+instead. The project also requires Cabal library 3.16 or newer for custom
+dependency setup scripts so HLS can use `--with-repl`.
+
+Restart HLS after switching build tools and wait for indexing to finish.
+Cross-module rename is experimental; inspect the diff and run `cabal test all`
+afterward. See the [HLS rename documentation](https://haskell-language-server.readthedocs.io/en/2.14.0.0/features.html#rename).
 
 ## Available commands
 

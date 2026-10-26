@@ -1,4 +1,4 @@
-# Stack
+# Legacy build artifacts
 .stack-work/
 .stack/
 *~
@@ -19,9 +19,9 @@
 *.aux
 *.hp
 *.eventlog
-advent-of-code2022-reloaded.cabal
 hls.log
 cabal.project.local
 cabal.project.local~
 .ghc.environment.*
 /dist-newstyle/
+/codecov.json

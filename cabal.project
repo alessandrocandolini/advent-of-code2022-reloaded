@@ -1,0 +1,13 @@
+packages: .
+
+-- Keep the compiler and package versions from the previous Stack snapshot.
+import: https://www.stackage.org/lts-24.63/cabal.config
+with-compiler: ghc-9.10.3
+
+-- HLS uses --with-repl, which needs a recent Cabal library in custom setups
+-- (including the transitive entropy dependency), not just cabal-install.
+constraints: any.Cabal >= 3.16
+
+-- Include tests in the build plan so HLS can index their references too.
+tests: True
+optimization: 2

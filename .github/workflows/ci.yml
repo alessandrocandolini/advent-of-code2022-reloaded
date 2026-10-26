@@ -5,7 +5,7 @@ on:
     branches: [ main, feature/** ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch: # enable manual execution
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}
@@ -15,72 +15,48 @@ permissions:
   contents: read
 
 env:
-  STACK_VERSION: "3.9.3"
+  GHC_VERSION: "9.10.3"
+  CABAL_VERSION: "3.18.1.0"
 
 jobs:
-  stack:
-
-    name: ${{ matrix.os }} / stack
+  cabal:
+    name: ${{ matrix.os }} / cabal
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
 
     steps:
-
     - name: Checkout repo
       uses: actions/checkout@v6
 
-    - name: Setup Haskell Stack
+    - name: Setup Haskell
       id: setup
       uses: haskell-actions/setup@v2
       with:
-        enable-stack: true
-        stack-no-global: true
-        stack-version: ${{ env.STACK_VERSION }}
+        ghc-version: ${{ env.GHC_VERSION }}
+        cabal-version: ${{ env.CABAL_VERSION }}
 
-    - name: Cache Stack programs
-      id: stack-programs-cache
+    - name: Cache Cabal dependencies
       uses: actions/cache@v5
       with:
-        path: ${{ steps.setup.outputs.stack-root }}/programs
-        key: ${{ runner.os }}-stack-programs-${{ env.STACK_VERSION }}-${{ hashFiles('stack.yaml', 'stack.yaml.lock') }}
+        path: ${{ steps.setup.outputs.cabal-store }}
+        key: ${{ runner.os }}-${{ runner.arch }}-cabal-${{ env.CABAL_VERSION }}-ghc-${{ env.GHC_VERSION }}-${{ hashFiles('cabal.project', 'cabal.project.freeze', '*.cabal') }}
         restore-keys: |
-          ${{ runner.os }}-stack-programs-${{ env.STACK_VERSION }}-
+          ${{ runner.os }}-${{ runner.arch }}-cabal-${{ env.CABAL_VERSION }}-ghc-${{ env.GHC_VERSION }}-
 
-    - name: Cache Stack dependencies
-      id: stack-deps-cache
-      uses: actions/cache@v5
-      with:
-        path: |
-          ${{ steps.setup.outputs.stack-root }}/build-plan
-          ${{ steps.setup.outputs.stack-root }}/indices
-          ${{ steps.setup.outputs.stack-root }}/pantry
-          ${{ steps.setup.outputs.stack-root }}/snapshots
-        key: ${{ runner.os }}-stack-deps-${{ env.STACK_VERSION }}-${{ hashFiles('stack.yaml', 'stack.yaml.lock', 'package.yaml', '*.cabal') }}
-        restore-keys: |
-          ${{ runner.os }}-stack-deps-${{ env.STACK_VERSION }}-
-
-    - name: Install dependencies
-      if: (steps.stack-programs-cache.outputs.cache-hit != 'true' || steps.stack-deps-cache.outputs.cache-hit != 'true') && success()
-      timeout-minutes: 15
-      run: |
-        stack build --test --no-run-tests --only-dependencies
+    - name: Build
+      timeout-minutes: 30
+      run: cabal build all --enable-coverage
 
     - name: Run tests with coverage
       timeout-minutes: 15
-      run: |
-        stack test --coverage --fast
-
-    - name: Build
-      timeout-minutes: 15
-      run: |
-        stack build --test --no-run-tests
+      run: cabal test all --enable-coverage --test-show-details=direct
 
     - name: Generate coverage report
       uses: 8c6794b6/hpc-codecov-action@v4
       with:
-        target: stack:advent-of-code2022-reloaded-test
+        target: cabal:advent-of-code2022-reloaded-test
         out: ./codecov.json
         verbose: true
 
@@ -88,7 +64,7 @@ jobs:
       uses: codecov/codecov-action@v6
       with:
         files: ./codecov.json
-        fail_ci_if_error: false # optional (default = false)
+        fail_ci_if_error: false
         verbose: true
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

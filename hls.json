@@ -1,0 +1,14 @@
+{
+  "haskell": {
+    "formattingProvider": "fourmolu",
+    "componentsLoading": "multi: whole-project",
+    "checkProject": true,
+    "plugin": {
+      "rename": {
+        "config": {
+          "crossModule": true
+        }
+      }
+    }
+  }
+}
