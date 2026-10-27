@@ -1,13 +1,14 @@
 cradle:
   stack:
-    - path: "./src"
-      component: "advent-of-code2022-reloaded:lib"
+    componentsToLoad:
+      - "advent-of-code2022-reloaded:lib"
+      - "advent-of-code2022-reloaded:test:advent-of-code2022-reloaded-test"
+    components:
+      - path: "./src"
+        component: "advent-of-code2022-reloaded:lib"
 
-    - path: "./app/Main.hs"
-      component: "advent-of-code2022-reloaded:exe:aoc2022"
+      - path: "./app/Main.hs"
+        component: "advent-of-code2022-reloaded:exe:aoc2022"
 
-    - path: "./test"
-      component: "advent-of-code2022-reloaded:test:advent-of-code2022-reloaded-test"
-
-    - path: "./benchmarks/Main.hs"
-      component: "advent-of-code2022-reloaded:bench:advent-of-code2022-reloaded-benchmarks"
+      - path: "./test"
+        component: "advent-of-code2022-reloaded:test:advent-of-code2022-reloaded-test"
