@@ -5,7 +5,7 @@ on:
     branches: [ main, feature/** ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch: # enable manual execution
 
 concurrency:
   group: ${{ github.ref }}
@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 env:
-  GHC_VERSION: "9.10.3"
+  GHC_VERSION: "9.14.1"
   CABAL_VERSION: "3.18.1.0"
 
 jobs:

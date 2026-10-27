@@ -1,4 +1,4 @@
-# Legacy build artifacts
+# Stack
 .stack-work/
 .stack/
 *~

@@ -56,11 +56,10 @@ cabal run aoc2022 -- --help
 cabal run aoc2022 -- solve -d 1 -f input
 ```
 
-To copy the executable to the project root:
+To install the executable in the project root:
 
 ```bash
-cabal build exe:aoc2022
-cp "$(cabal list-bin exe:aoc2022)" ./aoc2022
+cabal install exe:aoc2022 --installdir=. --install-method=copy --overwrite-policy=always
 ./aoc2022 --help
 ```
 
