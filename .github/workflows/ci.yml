@@ -65,17 +65,17 @@ jobs:
       if: (steps.stack-programs-cache.outputs.cache-hit != 'true' || steps.stack-deps-cache.outputs.cache-hit != 'true') && success()
       timeout-minutes: 15
       run: |
-        stack build --test --no-run-tests --only-dependencies
+        stack --lock-file error-on-write build --test --no-run-tests --only-dependencies
 
     - name: Run tests with coverage
       timeout-minutes: 15
       run: |
-        stack test --coverage --fast
+        stack --lock-file error-on-write test --coverage --fast
 
     - name: Build
       timeout-minutes: 15
       run: |
-        stack build --test --no-run-tests
+        stack --lock-file error-on-write build --test --no-run-tests
 
     - name: Generate coverage report
       uses: 8c6794b6/hpc-codecov-action@v4
