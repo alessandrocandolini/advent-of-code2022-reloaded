@@ -21,10 +21,10 @@ newtype Calories = Calories Int
   deriving (Eq, Ord, Show, Num) via Int
   deriving (Semigroup) via (Sum Int)
 
-data Elf = Elf (NonEmpty Calories) deriving (Eq, Show)
+newtype Elf = Elf {calories :: NonEmpty Calories} deriving (Eq, Show)
 
 totalCalories :: Elf -> Calories
-totalCalories (Elf calories) = fold1 calories
+totalCalories = fold1 . calories
 
 solve1 :: NonEmpty Elf -> Calories
 solve1 = maximum . fmap totalCalories
