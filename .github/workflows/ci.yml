@@ -14,9 +14,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  STACK_VERSION: "3.9.3"
-
 jobs:
   stack:
 
@@ -25,28 +22,28 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-24.04]
+    defaults:
+      run:
+        shell: nix develop --no-update-lock-file --command bash --noprofile --norc -euo pipefail {0}
 
     steps:
 
     - name: Checkout repo
       uses: actions/checkout@v6
 
-    - name: Setup Haskell Stack
-      id: setup
-      uses: haskell-actions/setup@v2
+    - name: Install Nix
+      uses: cachix/install-nix-action@v31
       with:
-        enable-stack: true
-        stack-no-global: true
-        stack-version: ${{ env.STACK_VERSION }}
+        install_url: https://releases.nixos.org/nix/nix-2.32.4/install
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Restore Stack programs
-      id: stack-programs-cache
-      uses: actions/cache/restore@v5
-      with:
-        path: ${{ steps.setup.outputs.stack-root }}/programs
-        key: ${{ runner.os }}-${{ matrix.os }}-stack-programs-${{ env.STACK_VERSION }}-${{ hashFiles('stack.yaml', 'stack.yaml.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.os }}-stack-programs-${{ env.STACK_VERSION }}-
+    - name: Prepare Nix environment
+      id: setup
+      run: |
+        ghc --version
+        stack --numeric-version
+        hpc-codecov --version
+        printf 'stack-root=%s\n' "$(stack path --stack-root)" >> "$GITHUB_OUTPUT"
 
     - name: Restore Stack dependencies
       id: stack-deps-cache
@@ -57,22 +54,15 @@ jobs:
           ${{ steps.setup.outputs.stack-root }}/indices
           ${{ steps.setup.outputs.stack-root }}/pantry
           ${{ steps.setup.outputs.stack-root }}/snapshots
-        key: ${{ runner.os }}-${{ matrix.os }}-stack-deps-${{ env.STACK_VERSION }}-${{ hashFiles('stack.yaml', 'stack.yaml.lock', 'package.yaml', '*.cabal') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.os }}-nix-stack-deps-${{ hashFiles('flake.lock') }}-${{ hashFiles('stack.yaml', 'stack.yaml.lock', 'package.yaml', '*.cabal') }}
         restore-keys: |
-          ${{ runner.os }}-${{ matrix.os }}-stack-deps-${{ env.STACK_VERSION }}-
+          ${{ runner.os }}-${{ runner.arch }}-${{ matrix.os }}-nix-stack-deps-${{ hashFiles('flake.lock') }}-
 
     - name: Install dependencies
-      if: (steps.stack-programs-cache.outputs.cache-hit != 'true' || steps.stack-deps-cache.outputs.cache-hit != 'true') && success()
+      if: steps.stack-deps-cache.outputs.cache-hit != 'true'
       timeout-minutes: 15
       run: |
         stack --lock-file error-on-write build --test --no-run-tests --only-dependencies
-
-    - name: Save Stack programs
-      if: steps.stack-programs-cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
-      with:
-        path: ${{ steps.setup.outputs.stack-root }}/programs
-        key: ${{ steps.stack-programs-cache.outputs.cache-primary-key }}
 
     - name: Save Stack dependencies
       if: steps.stack-deps-cache.outputs.cache-hit != 'true'
@@ -96,11 +86,8 @@ jobs:
         stack --lock-file error-on-write build --test --no-run-tests
 
     - name: Generate coverage report
-      uses: 8c6794b6/hpc-codecov-action@v4
-      with:
-        target: stack:advent-of-code2022-reloaded-test
-        out: ./codecov.json
-        verbose: true
+      run: |
+        hpc-codecov --verbose --out ./codecov.json stack:advent-of-code2022-reloaded-test
 
     - name: Send coverage report
       uses: codecov/codecov-action@v6

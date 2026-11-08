@@ -10,7 +10,19 @@ Since then, I’ve learned a thing or two. Time to solve them again in fresh new
 ## How to build and run locally
 
 The project uses the [Haskell tool stack](https://docs.haskellstack.org/en/stable/README/). The recommended way to install stack is by using [ghcup](https://www.haskell.org/ghcup/).
-It's also possible to use [the nix package manager](https://nixos.org/), but this project does not provide a nix configuration file.
+Alternatively, use [Nix](https://nixos.org/) with flakes enabled to enter the same pinned environment as CI:
+```
+nix develop
+```
+The environment provides GHC, Stack, native libraries, and `hpc-codecov`. The Stack commands below work inside it. To run a command directly:
+```
+nix develop --command stack test --coverage --fast
+```
+After running tests with coverage, generate the Codecov report with:
+```
+nix develop --command hpc-codecov --out codecov.json stack:advent-of-code2022-reloaded-test
+```
+`flake.lock` pins the Nix packages. To update them, run `nix flake update nixpkgs` and commit the updated lockfile. The GHC version in `flake.nix` must match the Stack snapshot. Nix provides the tools; Stack still builds and caches the project's Haskell dependencies.
 
 Assuming `stack` is installed in the system, to **build** the project use
 ```
