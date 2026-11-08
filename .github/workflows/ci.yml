@@ -43,7 +43,7 @@ jobs:
       id: stack-programs-cache
       uses: actions/cache/restore@v5
       with:
-        path: ${{ steps.setup.outputs.stack-root }}/programs
+        path: &stack-programs-path ${{ steps.setup.outputs.stack-root }}/programs
         key: ${{ runner.os }}-${{ matrix.os }}-stack-programs-${{ env.STACK_VERSION }}-${{ hashFiles('stack.yaml', 'stack.yaml.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ matrix.os }}-stack-programs-${{ env.STACK_VERSION }}-
@@ -52,7 +52,7 @@ jobs:
       id: stack-deps-cache
       uses: actions/cache/restore@v5
       with:
-        path: |
+        path: &stack-dependency-paths |
           ${{ steps.setup.outputs.stack-root }}/build-plan
           ${{ steps.setup.outputs.stack-root }}/indices
           ${{ steps.setup.outputs.stack-root }}/pantry
@@ -71,18 +71,14 @@ jobs:
       if: steps.stack-programs-cache.outputs.cache-hit != 'true'
       uses: actions/cache/save@v5
       with:
-        path: ${{ steps.setup.outputs.stack-root }}/programs
+        path: *stack-programs-path
         key: ${{ steps.stack-programs-cache.outputs.cache-primary-key }}
 
     - name: Save Stack dependencies
       if: steps.stack-deps-cache.outputs.cache-hit != 'true'
       uses: actions/cache/save@v5
       with:
-        path: |
-          ${{ steps.setup.outputs.stack-root }}/build-plan
-          ${{ steps.setup.outputs.stack-root }}/indices
-          ${{ steps.setup.outputs.stack-root }}/pantry
-          ${{ steps.setup.outputs.stack-root }}/snapshots
+        path: *stack-dependency-paths
         key: ${{ steps.stack-deps-cache.outputs.cache-primary-key }}
 
     - name: Run tests with coverage
